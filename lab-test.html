@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Network Lab — Quick Lab Test</title>
+  <style>
+    body{font-family:Inter,Arial,Helvetica,sans-serif;margin:0;background:#0b1220;color:#e6eef6}
+    .wrap{max-width:1000px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;gap:14px}
+    h1{margin:0;font-size:20px}
+    p.lead{color:#9fb0c8;margin:6px 0 18px}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+    .card{background:#071427;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,.6)}
+    pre{background:#051222;padding:10px;border-radius:8px;overflow:auto;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+    .tabs{display:flex;gap:8px;margin-bottom:12px}
+    .tab{padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.04);cursor:pointer;color:#9fb0c8}
+    .tab.active{background:#ffb86b;color:#071219}
+    .copy{background:transparent;border:1px solid rgba(255,255,255,.06);padding:6px 10px;border-radius:8px;cursor:pointer;color:#9fb0c8}
+    small.note{color:#a6b8c9}
+    footer{margin-top:16px;color:#8aa0b8;font-size:13px}
+    @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Network-lab-test — Quick Lab Test</h1>
+    </header>
+    <p class="lead">Simple, copyable commands for beginners: Nmap scans, tshark/Wireshark captures, and a quick Burp reminder. Use these in your VM lab (Kali or similar).</p>
+
+    <div class="grid">
+      <main class="card">
+        <h2 style="margin-top:0">How to use</h2>
+        <ol>
+          <li>Open your lab VM (Kali). Ensure network is the target subnet (e.g. <code>192.168.131.0/24</code>).</li>
+          <li>Choose a tool tab on the right, click <em>Copy</em> and paste into your VM terminal.</li>
+          <li>Save results into <code>scans/</code> folder and review in Wireshark or with the provided templates.</li>
+        </ol>
+
+        <h3>Notes</h3>
+        <p class="note">Only scan networks you own or have permission to test. The examples below are sanitized for training.</p>
+
+        <h3>Common workflows</h3>
+        <ul>
+          <li>Discover hosts: fast SYN scan across subnet.</li>
+          <li>Service enumeration: version detection on discovered ports.</li>
+          <li>Capture traffic: use <code>tshark</code> or Wireshark to validate live flows.</li>
+        </ul>
+
+        <h3>Example outputs (sanitized)</h3>
+        <pre># Nmap sample (sanitized)
+# Host: 192.168.131.10
+22/tcp open  ssh  OpenSSH 7.9p1
+80/tcp open  http Apache 2.4.29
+139/tcp open  netbios-ssn Samba 3.6.23
+
+# Host: 192.168.131.20
+443/tcp open https nginx 1.14.0
+</pre>
+
+      </main>
+
+      <aside class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <strong>Commands & Quick Copy</strong>
+          <button class="copy" id="copyAll">Copy visible</button>
+        </div>
+
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tool="nmap">Nmap</button>
+          <button class="tab" data-tool="wireshark">Wireshark</button>
+          <button class="tab" data-tool="burp">Burp</button>
+        </div>
+
+        <div id="panels">
+          <div data-panel="nmap">
+            <div style="margin-bottom:8px"><small>Install (Debian/Kali)</small></div>
+            <pre id="nmap0">sudo apt update && sudo apt install -y nmap</pre>
+
+            <div style="margin-top:8px"><small>Full SYN scan (requires sudo)</small></div>
+            <pre id="nmap1">sudo nmap -sS -p- -T4 -oA scans/full_192_168_131_0_24 192.168.131.0/24</pre>
+
+            <div style="margin-top:8px"><small>Service/version scan (example host)</small></div>
+            <pre id="nmap2">sudo nmap -sV -sC -p 22,80,139,443 -oN scans/192.168.131.10_services.txt 192.168.131.10</pre>
+          </div>
+
+          <div data-panel="wireshark" style="display:none">
+            <div style="margin-bottom:8px"><small>Tshark capture (60s)</small></div>
+            <pre id="tshark1">sudo tshark -i any -a duration:60 -f "net 192.168.131.0/24" -w scans/capture_subnet.pcap</pre>
+
+            <div style="margin-top:8px"><small>Open in Wireshark (GUI)</small></div>
+            <pre id="tshark2">wireshark scans/capture_subnet.pcap</pre>
+
+            <div style="margin-top:8px"><small>Common display filter</small></div>
+            <pre id="tshark3">ip.addr==192.168.131.0/24 && (tcp.port==22 || tcp.port==80 || tcp.port==443 || tcp.port==139)</pre>
+          </div>
+
+          <div data-panel="burp" style="display:none">
+            <div style="margin-bottom:8px"><small>Start Burp Suite (if installed)</small></div>
+            <pre id="burp1">burpsuite</pre>
+
+            <div style="margin-top:8px"><small>Proxy & Intruder quick steps</small></div>
+            <pre id="burp2">Proxy: 127.0.0.1:8080
+Intercept login -> Send to Repeater -> Modify -> Send to Intruder
+Positions: mark password only -> Payloads: load webapp-burp/wordlists/small-passwords.txt -> Start (Sniper)</pre>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;color:#9fb0c8;font-size:13px">
+          <small>Tip: Click a tab, then press the <em>Copy</em> buttons next to commands (or "Copy visible") to paste into your VM terminal.</small>
+        </div>
+
+      </aside>
+    </div>
+
+    <footer>
+      <p>Saved outputs should go to <code>scans/</code>. Use the templates in the repo to create risk assessments and research services.</p>
+    </footer>
+  </div>
+
+  <script>
+    // tabs and copy
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('[data-panel]');
+    tabs.forEach(t => t.addEventListener('click', ()=>{
+      tabs.forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const sel = t.dataset.tool;
+      panels.forEach(p=>p.style.display = p.dataset.panel===sel ? 'block' : 'none');
+    }));
+
+    async function copyText(txt){
+      try{ await navigator.clipboard.writeText(txt); alert('Copied to clipboard'); }
+      catch(e){ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('Copied (fallback)'); }
+    }
+
+    // per-pre element copy on click
+    document.querySelectorAll('pre').forEach(pre=>{
+      const btn = document.createElement('button'); btn.textContent='Copy'; btn.className='copy';
+      btn.style.float='right'; btn.style.marginTop='-36px';
+      btn.addEventListener('click', ()=>copyText(pre.innerText.trim()));
+      pre.parentNode.insertBefore(btn, pre);
+    });
+
+    document.getElementById('copyAll').addEventListener('click', ()=>{
+      const visible = Array.from(panels).find(p=>p.style.display!=='none');
+      if(!visible){ alert('No panel visible'); return; }
+      const text = Array.from(visible.querySelectorAll('pre')).map(p=>p.innerText.trim()).join('\n\n');
+      copyText(text);
+    });
+  </script>
+</body>
+</html>
